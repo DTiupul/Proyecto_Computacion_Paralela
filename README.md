@@ -4,6 +4,19 @@ Proyecto académico de **Computación Paralela** que procesa un dataset clínico
 pacientes, calcula indicadores respiratorios y antropométricos, almacena los resultados
 en **MySQL** y los visualiza en un **dashboard interactivo de Streamlit**.
 
+# Participantes
+
+Proyecto desarrollado en conjunto por:
+
+| Participante | Aportes |
+|---|---|
+| **Danny Tiupul** | Creación del proyecto, captura de datos y desarrollo de las arquitecturas **MISD** y **MIMD** |
+| **Melany Iza** | Desarrollo de la arquitectura **SIMD** y desarrollo de la base de datos |
+
+Ambos participantes trabajaron en conjunto en el desarrollo de los dashboards.
+
+Proyecto académico de Computación Paralela — ESPE.
+
 El objetivo es comparar tres formas de organizar el mismo trabajo:
 
 | Enfoque | Script | Hilos | Qué reparte |
@@ -252,15 +265,3 @@ scripts de procesamiento y por el dashboard.
 - El tiempo impreso por `main.py` corresponde solo al cálculo; la carga del CSV y la
   escritura en MySQL quedan fuera de la medición.
 
-# Participantes
-
-Proyecto desarrollado en conjunto por:
-
-| Participante | Aportes |
-|---|---|
-| **Danny Tiupul** | Creación del proyecto, captura de datos y desarrollo de las arquitecturas **MISD** y **MIMD** |
-| **Melany Iza** | Desarrollo de la arquitectura **SIMD** y desarrollo de la base de datos |
-
-Ambos participantes trabajaron en conjunto en el desarrollo de los dashboards.
-
-Proyecto académico de Computación Paralela — ESPE.
