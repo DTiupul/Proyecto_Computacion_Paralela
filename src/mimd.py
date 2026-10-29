@@ -1,9 +1,17 @@
+"""Procesamiento multihilo MIMD por etapas.
+
+El dataset se divide en 3 partes y cada hilo aplica una instruccion
+distinta sobre su propio bloque de datos.
+"""
+
 import csv
 import threading
 import time
 
-from conexion import conectar_mysql
 import mysql.connector
+
+from conexion import conectar_mysql
+from rutas import RUTA_DATASET
 
 # ==========================================
 # MIMD: Multiple Instruction, Multiple Data
@@ -34,7 +42,7 @@ fio2 = []
 volumen_corriente_ml = []
 frecuencia_respiratoria_rpm = []
 
-with open('dataset_5001.csv', 'r', encoding="utf-8-sig", newline="") as archivo:
+with open(RUTA_DATASET, "r", encoding="utf-8-sig", newline="") as archivo:
     lector = csv.reader(archivo)
     next(lector)  # Para saltarse los encabezados
 

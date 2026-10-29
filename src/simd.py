@@ -1,14 +1,26 @@
+"""Procesamiento secuencial (linea base SIMD) del IMC.
+
+Lee el dataset, calcula el IMC en un unico flujo de ejecucion y guarda
+los resultados en la tabla calculo_simd.
+"""
+
 import csv
 import time
 
-from conexion import conectar_mysql
 import mysql.connector
+
+from conexion import conectar_mysql
+from rutas import RUTA_DATASET
+
+# ==========================================
+# 1. CARGA DEL DATASET
+# ==========================================
 
 id = []
 peso_kg = []
 estatura_m = []
 
-with open('dataset_5001.csv', 'r', encoding="utf-8-sig", newline="") as archivo:
+with open(RUTA_DATASET, "r", encoding="utf-8-sig", newline="") as archivo:
     lector = csv.reader(archivo)
     next(lector)  # Saltar los encabezados
 
@@ -23,6 +35,10 @@ with open('dataset_5001.csv', 'r', encoding="utf-8-sig", newline="") as archivo:
 imc = [0.0] * len(id)
 
 
+# ==========================================
+# 2. CALCULO DEL IMC (UN SOLO FLUJO)
+# ==========================================
+
 def calcular_imc():
     for i in range(len(id)):
         imc[i] = round(peso_kg[i] / (estatura_m[i] * estatura_m[i]), 2)
@@ -30,11 +46,15 @@ def calcular_imc():
 
 inicio = time.perf_counter_ns()
 
-# Unico flujo de procesamiento SIMD
 calcular_imc()
 
 fin = time.perf_counter_ns()
 tiempo = (fin - inicio) / 1000  # Convertir a microsegundos
+
+
+# ==========================================
+# 3. RESULTADOS POR PANTALLA
+# ==========================================
 
 for i in range(len(id)):
     print("\n--------------------------------")
@@ -50,7 +70,10 @@ print("TOTAL REGISTROS:", len(id))
 print("\n--------------------")
 print(f"TIEMPO: {tiempo:.4f} us")
 
-# "conectar a mysql y guardar en la base de datos"
+
+# ==========================================
+# 4. GUARDAR EN MYSQL
+# ==========================================
 
 conexion = None
 cursor = None

@@ -1,15 +1,15 @@
 sequenceDiagram
     autonumber
     actor U as Usuario
-    participant CSV as dataset_5001.csv
-    participant MISD as misd.py
-    participant MAIN as main.py
-    participant MIMD as mimd.py
+    participant CSV as data/dataset_5001.csv
+    participant MISD as src/misd.py
+    participant SIMD as src/simd.py
+    participant MIMD as src/mimd.py
     participant DB as MySQL
-    participant DASH as dashboard.py
+    participant DASH as src/dashboard.py
 
-    Note over U,DB: Paso 1 - misd.py debe ejecutarse primero<br/>porque crea datos_fisiologicos (tabla padre de las FK)
-    U->>MISD: python misd.py
+    Note over U,DB: Paso 1 - src/misd.py debe ejecutarse primero<br/>porque crea datos_fisiologicos (tabla padre de las FK)
+    U->>MISD: python src/misd.py
     MISD->>CSV: leer 5001 registros x 10 columnas
     MISD->>MISD: 4 hilos sobre todo el dataset
     MISD->>DB: INSERT datos_fisiologicos (ON DUPLICATE KEY UPDATE)
@@ -17,14 +17,14 @@ sequenceDiagram
     DB-->>U: DATOS GUARDADOS CORRECTAMENTE
 
     Note over U,DB: Paso 2 - linea base secuencial
-    U->>MAIN: python main.py
-    MAIN->>CSV: leer id, peso_kg, estatura_m
-    MAIN->>MAIN: calcular IMC en un solo bucle
-    MAIN->>DB: INSERT calculo_simd (ON DUPLICATE KEY UPDATE)
+    U->>SIMD: python src/simd.py
+    SIMD->>CSV: leer id, peso_kg, estatura_m
+    SIMD->>SIMD: calcular IMC en un solo bucle
+    SIMD->>DB: INSERT calculo_simd (ON DUPLICATE KEY UPDATE)
     DB-->>U: DATOS GUARDADOS CORRECTAMENTE
 
     Note over U,DB: Paso 3 - procesamiento MIMD por etapas
-    U->>MIMD: python mimd.py
+    U->>MIMD: python src/mimd.py
     MIMD->>CSV: leer 5001 registros
     MIMD->>MIMD: partir en 3 bloques y lanzar 3 hilos
     MIMD->>DB: CREATE TABLE IF NOT EXISTS calculo_mimd_etapas
@@ -32,7 +32,7 @@ sequenceDiagram
     DB-->>U: DATOS GUARDADOS CORRECTAMENTE
 
     Note over U,DASH: Paso 4 - visualizacion
-    U->>DASH: streamlit run dashboard.py
+    U->>DASH: streamlit run src/dashboard.py
     DASH->>DB: SELECT datos_fisiologicos + calculo_simd + calculo_misd + calculo_mimd_etapas
     DB-->>DASH: DataFrames (pandas)
     DASH-->>U: 3 pestanas con graficos, filtros y tiempos

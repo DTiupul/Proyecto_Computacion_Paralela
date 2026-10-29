@@ -1,5 +1,5 @@
 flowchart TB
-    A["Inicio"] --> B["Abrir dataset_5001.csv<br/>encoding utf-8-sig"]
+    A["Inicio"] --> B["Abrir data/dataset_5001.csv<br/>encoding utf-8-sig"]
     B --> C["Leer solo 3 columnas:<br/>id, peso_kg, estatura_m"]
     C --> D["Reservar vector imc = [0.0] * 5001"]
     D --> E["inicio = time.perf_counter_ns()"]

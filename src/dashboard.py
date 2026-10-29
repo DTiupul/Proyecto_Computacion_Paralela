@@ -1,3 +1,5 @@
+"""Dashboard Streamlit para visualizar los resultados SIMD, MISD y MIMD."""
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -16,7 +18,7 @@ st.set_page_config(
 
 st.title("Evaluación de Indicadores Respiratorios mediante las Arquitecturas SIMD, MISD y MIMD")
 st.caption(
-    "Computación Paralela | Procesamiento SIMD secuencial (main.py), MISD multihilo "
+    "Computación Paralela | Procesamiento SIMD secuencial (simd.py), MISD multihilo "
     "(misd.py) y MIMD por etapas (mimd.py) | Python + MySQL"
 )
 
@@ -346,7 +348,7 @@ unidad_tiempo = st.sidebar.selectbox(
 st.sidebar.divider()
 st.sidebar.caption(
     "**Fuente de datos**\n\n"
-    "- `main.py` → `calculo_simd`\n"
+    "- `simd.py` → `calculo_simd`\n"
     "- `misd.py` → `calculo_misd` + `datos_fisiologicos`\n"
     "- `mimd.py` → `calculo_mimd_etapas` (una fila por paciente y etapa)\n\n"
     "Los tres dashboards se enriquecen por la FK "
@@ -617,11 +619,11 @@ def barras_promedio(
 
 
 # ==========================================
-# 8. DASHBOARD SIMD (main.py)
+# 8. DASHBOARD SIMD (simd.py)
 # ==========================================
 
 def render_dashboard_simd(datos: pd.DataFrame, error: str | None, unidad: str) -> None:
-    st.subheader("SIMD secuencial · `main.py`")
+    st.subheader("SIMD secuencial · `simd.py`")
     st.caption(
         "Un único flujo de procesamiento calcula el IMC de los 5 001 registros. "
         "La tabla `calculo_simd` guarda el resultado por paciente y se une por FK con "
@@ -635,7 +637,7 @@ def render_dashboard_simd(datos: pd.DataFrame, error: str | None, unidad: str) -
     if datos.empty:
         st.info(
             "No existen resultados en `calculo_simd`. Ejecute primero "
-            "`python main.py` para realizar el procesamiento SIMD."
+            "`python src/simd.py` para realizar el procesamiento SIMD."
         )
         return
 
@@ -1575,7 +1577,7 @@ def render_dashboard_mimd(datos: pd.DataFrame, error: str | None, unidad: str) -
 
 pestana_simd, pestana_misd, pestana_mimd = st.tabs(
     [
-        "📊 Dashboard SIMD · main.py",
+        "📊 Dashboard SIMD · simd.py",
         "🧵 Dashboard MISD · misd.py",
         "⚙️ Dashboard MIMD · mimd.py",
     ]
@@ -1593,7 +1595,7 @@ with pestana_mimd:
 st.divider()
 st.caption(
     "Los dashboards consultan `calculo_simd`, `calculo_misd`, "
-    "`calculo_mimd_etapas` y `datos_fisiologicos`. Ejecute `python main.py`, "
-    "`python misd.py` o `python mimd.py` para generar/actualizar los resultados "
+    "`calculo_mimd_etapas` y `datos_fisiologicos`. Ejecute `python src/simd.py`, "
+    "`python src/misd.py` o `python src/mimd.py` para generar/actualizar los resultados "
     "y luego use **🔄 Actualizar datos consultados**."
 )

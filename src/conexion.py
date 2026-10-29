@@ -1,14 +1,19 @@
+"""Conexion compartida a la base de datos MySQL del proyecto."""
+
 import mysql.connector
 
+
 def conectar_mysql():
+    """Devuelve una conexion abierta a la base de datos proyecto_paralela."""
     conexion = mysql.connector.connect(
         host="127.0.0.1",
         port=3307,
         user="root",
         password="",
         database="proyecto_paralela"
-    ) 
+    )
     return conexion
+
 
 if __name__ == "__main__":
     try:

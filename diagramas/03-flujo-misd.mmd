@@ -1,5 +1,5 @@
 flowchart TB
-    A["Inicio"] --> B["Leer dataset_5001.csv<br/>10 columnas - 5001 registros"]
+    A["Inicio"] --> B["Leer data/dataset_5001.csv<br/>10 columnas - 5001 registros"]
     B --> C["Reservar vectores de resultados<br/>imc, relacion_sf, ventilacion_ml_min, ventilacion_l_min"]
     C --> D["Crear 4 hilos con threading.Thread"]
     D --> E["inicio = time.perf_counter_ns()"]

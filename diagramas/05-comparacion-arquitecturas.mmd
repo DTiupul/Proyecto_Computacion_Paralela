@@ -1,19 +1,19 @@
 flowchart LR
-    subgraph SISD["Secuencial - main.py"]
+    subgraph SISD["Secuencial - src/simd.py"]
         direction TB
         S1["1 instruccion activa"] --> S2["1 procesador<br/>(1 hilo principal)"]
         S2 --> S3["Dataset completo<br/>5001 registros"]
         S3 --> S4["1 resultado por iteracion"]
     end
 
-    subgraph MISD_A["MISD - misd.py"]
+    subgraph MISD_A["MISD - src/misd.py"]
         direction TB
         M1["4 instrucciones distintas<br/>IMC / S-F / ventilacion / conversion"] --> M2["4 procesadores<br/>(4 hilos)"]
         M2 --> M3["El mismo dataset completo<br/>en los 4 hilos"]
         M3 --> M4["4 resultados en paralelo<br/>sobre los mismos 5001 pacientes"]
     end
 
-    subgraph MIMD_A["MIMD - mimd.py"]
+    subgraph MIMD_A["MIMD - src/mimd.py"]
         direction TB
         D1["3 instrucciones distintas<br/>IMC / S-F / ventilacion"] --> D2["3 procesadores<br/>(3 hilos)"]
         D2 --> D3["1/3 del dataset por hilo<br/>1667 registros cada uno"]
@@ -23,4 +23,4 @@ flowchart LR
     SISD ~~~ MISD_A
     MISD_A ~~~ MIMD_A
 
-    NOTE["Nota: main.py se etiqueta como SIMD en la tabla calculo_simd,<br/>pero su ejecucion real es secuencial (SISD), sin hilos."]
+    NOTE["Nota: src/simd.py se etiqueta como SIMD en la tabla calculo_simd,<br/>pero su ejecucion real es secuencial (SISD), sin hilos."]

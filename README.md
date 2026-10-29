@@ -21,7 +21,7 @@ El objetivo es comparar tres formas de organizar el mismo trabajo:
 
 | Enfoque | Script | Hilos | Qué reparte |
 |---|---|---|---|
-| Secuencial (base) | `main.py` | 1 | Nada: un solo flujo sobre todo el dataset |
+| Secuencial (base) | `simd.py` | 1 | Nada: un solo flujo sobre todo el dataset |
 | MISD | `misd.py` | 4 | Instrucciones: cada hilo aplica una operación distinta sobre **todo** el dataset |
 | MIMD | `mimd.py` | 3 | Datos e instrucciones: el dataset se parte en 3 y cada hilo hace una operación distinta sobre su tercio |
 
@@ -29,7 +29,7 @@ El objetivo es comparar tres formas de organizar el mismo trabajo:
 
 | Indicador | Fórmula | Dónde se calcula |
 |---|---|---|
-| IMC | `peso_kg / estatura_m²` | `main.py`, `misd.py`, `mimd.py` |
+| IMC | `peso_kg / estatura_m²` | `simd.py`, `misd.py`, `mimd.py` |
 | Relación SpO₂/FiO₂ | `spo2_pct / fio2` | `misd.py`, `mimd.py` |
 | Ventilación por minuto | `volumen_corriente_ml × frecuencia_respiratoria_rpm` | `misd.py`, `mimd.py` |
 | Conversión de ventilación | `ml/min ÷ 1000` → `L/min` | `misd.py`, `mimd.py` |
@@ -38,16 +38,23 @@ El objetivo es comparar tres formas de organizar el mismo trabajo:
 
 ```
 python_paralela/
-├── main.py                # Procesamiento secuencial (línea base) -> calculo_simd
-├── misd.py                # Multihilo MISD -> datos_fisiologicos + calculo_misd
-├── mimd.py                # Multihilo MIMD por etapas -> calculo_mimd_etapas
-├── conexion.py            # Función conectar_mysql() con los datos de conexión
-├── dashboard.py           # Dashboard Streamlit (3 pestañas: SIMD / MISD / MIMD)
-├── dataset_5001.csv       # Dataset de entrada (5001 registros)
-├── esquema.sql            # Creación de la base de datos y sus tablas
+├── src/                   # Código Python del proyecto
+│   ├── conexion.py        # Función conectar_mysql() con los datos de conexión
+│   ├── rutas.py           # Rutas compartidas (ubicación del dataset)
+│   ├── simd.py            # Procesamiento secuencial (línea base) -> calculo_simd
+│   ├── misd.py            # Multihilo MISD -> datos_fisiologicos + calculo_misd
+│   ├── mimd.py            # Multihilo MIMD por etapas -> calculo_mimd_etapas
+│   └── dashboard.py       # Dashboard Streamlit (3 pestañas: SIMD / MISD / MIMD)
+├── data/
+│   └── dataset_5001.csv   # Dataset de entrada (5001 registros)
+├── sql/
+│   └── esquema.sql        # Creación de la base de datos y sus tablas
 ├── diagramas/             # Diagramas del flujo y de las arquitecturas (Mermaid + PNG)
-└── requirements.txt       # Dependencias con versiones fijadas
+├── requirements.txt       # Dependencias con versiones fijadas
+└── README.md
 ```
+
+Todos los comandos de esta guía se ejecutan desde la raíz del repositorio.
 
 ## Diagramas
 
@@ -55,9 +62,9 @@ La carpeta [`diagramas/`](diagramas/) contiene diagramas en **Mermaid** (con su 
 PNG dentro de `diagramas/img/`) que explican el programa y las arquitecturas empleadas:
 
 1. **Arquitectura general** — del CSV a MySQL y al dashboard.
-2. **Flujo de `main.py`** — procesamiento secuencial.
-3. **Flujo de `misd.py`** — 4 hilos, 4 instrucciones, el mismo dataset.
-4. **Flujo de `mimd.py`** — dataset partido en 3, una instrucción por bloque.
+2. **Flujo de `src/simd.py`** — procesamiento secuencial.
+3. **Flujo de `src/misd.py`** — 4 hilos, 4 instrucciones, el mismo dataset.
+4. **Flujo de `src/mimd.py`** — dataset partido en 3, una instrucción por bloque.
 5. **Comparación de arquitecturas** — SISD vs MISD vs MIMD lado a lado.
 6. **Modelo de datos** — tablas, columnas y claves foráneas.
 7. **Secuencia de ejecución** — orden de los scripts y del dashboard.
@@ -66,7 +73,7 @@ Ver el índice completo en [`diagramas/README.md`](diagramas/README.md).
 
 ## Dataset
 
-`dataset_5001.csv` contiene 5001 filas y 10 columnas:
+`data/dataset_5001.csv` contiene 5001 filas y 10 columnas:
 
 ```
 id, genero, edad, practica_ejercicio, peso_kg, estatura_m,
@@ -153,17 +160,17 @@ python -c "import streamlit, pandas, mysql.connector; print('OK')"
 El proyecto usa la base de datos `proyecto_paralela`. Para crearla junto con sus tablas:
 
 ```bash
-mysql -u root -p -P 3307 < esquema.sql
+mysql -u root -p -P 3307 < sql/esquema.sql
 ```
 
-O desde MySQL Workbench / phpMyAdmin: abrir `esquema.sql` y ejecutarlo completo.
+O desde MySQL Workbench / phpMyAdmin: abrir `sql/esquema.sql` y ejecutarlo completo.
 
 Tablas creadas:
 
 | Tabla | Contenido |
 |---|---|
 | `datos_fisiologicos` | Datos crudos del paciente (una fila por `id`) |
-| `calculo_simd` | Resultado del IMC por paciente (`main.py`) |
+| `calculo_simd` | Resultado del IMC por paciente (`simd.py`) |
 | `calculo_misd` | Resultados de las 4 operaciones por ejecución (`misd.py`) |
 | `calculo_mimd_etapas` | Una fila por paciente **y** etapa (`mimd.py`) |
 
@@ -184,7 +191,7 @@ conexion = mysql.connector.connect(
 Comprobar la conexión:
 
 ```bash
-python conexion.py
+python src/conexion.py
 ```
 
 Debe imprimir `Conexion exitosa a la base de datos MySQL`.
@@ -198,13 +205,13 @@ Debe imprimir `Conexion exitosa a la base de datos MySQL`.
 
 ```bash
 # 1) Llena datos_fisiologicos y calculo_misd
-python misd.py
+python src/misd.py
 
 # 2) Calcula el IMC secuencial sobre los mismos pacientes
-python main.py
+python src/simd.py
 
 # 3) Ejecuta el reparto MIMD por etapas
-python mimd.py
+python src/mimd.py
 ```
 
 Cada script imprime en consola los resultados, el tiempo medido en microsegundos y el
@@ -214,7 +221,7 @@ número de registros guardados. Los tiempos quedan almacenados en la columna
 ## 8. Abrir el dashboard
 
 ```bash
-streamlit run dashboard.py
+streamlit run src/dashboard.py
 ```
 
 Streamlit abrirá `http://localhost:8501`. El dashboard tiene tres pestañas (SIMD, MISD y
@@ -226,7 +233,7 @@ y una sección de integridad de la base de datos. Usar el botón
 
 # Cómo funciona cada script
 
-## `main.py` — línea base secuencial
+## `simd.py` — línea base secuencial
 
 1. Lee solo `id`, `peso_kg` y `estatura_m` del CSV.
 2. Recorre los 5001 registros en un único bucle calculando el IMC (redondeado a 2 decimales).
@@ -263,8 +270,8 @@ scripts de procesamiento y por el dashboard.
 |---|---|---|
 | `Access denied for user 'root'@'localhost'` | Contraseña incorrecta en `conexion.py` | Actualizar `password` |
 | `Can't connect to MySQL server on '127.0.0.1'` | MySQL apagado o en otro puerto | Iniciar el servicio y ajustar `port` (3306 por defecto) |
-| `Unknown database 'proyecto_paralela'` | No se ejecutó el esquema | Ejecutar `esquema.sql` |
-| `Cannot add or update a child row: a foreign key constraint fails` | Se ejecutó `main.py` o `mimd.py` antes de llenar `datos_fisiologicos` | Ejecutar `misd.py` primero |
+| `Unknown database 'proyecto_paralela'` | No se ejecutó el esquema | Ejecutar `sql/esquema.sql` |
+| `Cannot add or update a child row: a foreign key constraint fails` | Se ejecutó `simd.py` o `mimd.py` antes de llenar `datos_fisiologicos` | Ejecutar `misd.py` primero |
 | `ModuleNotFoundError: No module named 'streamlit'` | Entorno virtual no activado | Activar `.venv` e instalar `requirements.txt` |
 | `Duplicate entry` al repetir `misd.py` | `calculo_misd` no tiene `ON DUPLICATE KEY UPDATE` | Es esperado: cada ejecución agrega filas; el dashboard muestra la última por paciente |
 | `pip` falla al compilar `numpy`/`pandas` | Python distinto de 3.14 o sin wheels | Usar Python 3.14 de 64 bits |
@@ -278,6 +285,6 @@ scripts de procesamiento y por el dashboard.
 - En `misd.py` los cuatro hilos arrancan a la vez, pero la conversión a L/min depende del
   resultado de la ventilación en ml/min. Al no existir sincronización entre `h3` y `h4`,
   esa conversión puede leer ceros según el orden de ejecución.
-- El tiempo impreso por `main.py` corresponde solo al cálculo; la carga del CSV y la
+- El tiempo impreso por `simd.py` corresponde solo al cálculo; la carga del CSV y la
   escritura en MySQL quedan fuera de la medición.
 

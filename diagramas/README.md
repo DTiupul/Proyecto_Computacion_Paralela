@@ -9,9 +9,9 @@ Cada diagrama tiene además su fuente en un archivo `.mmd` para poder editarlo o
 | # | Diagrama | Archivo | Qué muestra |
 |---|---|---|---|
 | 1 | Arquitectura general | [`01-arquitectura-general.mmd`](01-arquitectura-general.mmd) | Flujo completo: CSV → scripts → MySQL → dashboard |
-| 2 | Flujo de `main.py` | [`02-flujo-main.mmd`](02-flujo-main.mmd) | Procesamiento secuencial del IMC |
-| 3 | Flujo de `misd.py` | [`03-flujo-misd.mmd`](03-flujo-misd.mmd) | 4 hilos con 4 instrucciones sobre el mismo dataset |
-| 4 | Flujo de `mimd.py` | [`04-flujo-mimd.mmd`](04-flujo-mimd.mmd) | Dataset partido en 3 y una instrucción por bloque |
+| 2 | Flujo de `src/simd.py` | [`02-flujo-simd.mmd`](02-flujo-simd.mmd) | Procesamiento secuencial del IMC |
+| 3 | Flujo de `src/misd.py` | [`03-flujo-misd.mmd`](03-flujo-misd.mmd) | 4 hilos con 4 instrucciones sobre el mismo dataset |
+| 4 | Flujo de `src/mimd.py` | [`04-flujo-mimd.mmd`](04-flujo-mimd.mmd) | Dataset partido en 3 y una instrucción por bloque |
 | 5 | Comparación de arquitecturas | [`05-comparacion-arquitecturas.mmd`](05-comparacion-arquitecturas.mmd) | SISD vs MISD vs MIMD lado a lado |
 | 6 | Modelo de datos | [`06-modelo-datos.mmd`](06-modelo-datos.mmd) | Tablas, columnas y claves foráneas |
 | 7 | Secuencia de ejecución | [`07-secuencia-ejecucion.mmd`](07-secuencia-ejecucion.mmd) | Orden en que se ejecutan los scripts y el dashboard |
@@ -30,13 +30,13 @@ une las tablas por la clave foránea `paciente_id`.
 ```mermaid
 flowchart TB
     subgraph ENTRADA["Entrada"]
-        CSV["dataset_5001.csv<br/>5001 registros x 10 columnas"]
+        CSV["data/dataset_5001.csv<br/>5001 registros x 10 columnas"]
     end
 
     subgraph PROC["Procesamiento en Python"]
-        MAIN["main.py<br/>Secuencial - 1 hilo<br/>calcula IMC"]
-        MISD["misd.py<br/>4 hilos - MISD<br/>4 operaciones sobre todo el dataset"]
-        MIMD["mimd.py<br/>3 hilos - MIMD<br/>dataset partido en 3"]
+        SIMD["src/simd.py<br/>Secuencial - 1 hilo<br/>calcula IMC"]
+        MISD["src/misd.py<br/>4 hilos - MISD<br/>4 operaciones sobre todo el dataset"]
+        MIMD["src/mimd.py<br/>3 hilos - MIMD<br/>dataset partido en 3"]
     end
 
     subgraph BD["MySQL - base de datos proyecto_paralela"]
@@ -47,16 +47,16 @@ flowchart TB
     end
 
     subgraph VIS["Visualizacion"]
-        DASH["dashboard.py<br/>Streamlit - puerto 8501"]
+        DASH["src/dashboard.py<br/>Streamlit - puerto 8501"]
     end
 
-    CSV --> MAIN
+    CSV --> SIMD
     CSV --> MISD
     CSV --> MIMD
 
     MISD -->|"INSERT / UPDATE"| DF
     MISD -->|"INSERT"| CM
-    MAIN -->|"INSERT / UPDATE"| CS
+    SIMD -->|"INSERT / UPDATE"| CS
     MIMD -->|"INSERT / UPDATE"| CME
 
     DF -.->|"FK paciente_id"| CS
@@ -73,14 +73,14 @@ flowchart TB
 
 ---
 
-## 2. Flujo de `main.py` (secuencial)
+## 2. Flujo de `src/simd.py` (secuencial)
 
 Un solo hilo recorre los 5001 registros. El cronómetro envuelve únicamente el bucle de
 cálculo: la carga del CSV y la escritura en MySQL quedan fuera de la medición.
 
 ```mermaid
 flowchart TB
-    A["Inicio"] --> B["Abrir dataset_5001.csv<br/>encoding utf-8-sig"]
+    A["Inicio"] --> B["Abrir data/dataset_5001.csv<br/>encoding utf-8-sig"]
     B --> C["Leer solo 3 columnas:<br/>id, peso_kg, estatura_m"]
     C --> D["Reservar vector imc = [0.0] * 5001"]
     D --> E["inicio = time.perf_counter_ns()"]
@@ -105,14 +105,14 @@ flowchart TB
 
 ---
 
-## 3. Flujo de `misd.py` (MISD)
+## 3. Flujo de `src/misd.py` (MISD)
 
 Los cuatro hilos leen **el mismo dataset completo** y cada uno ejecuta una instrucción
 distinta. El tiempo se mide desde el primer `start()` hasta el último `join()`.
 
 ```mermaid
 flowchart TB
-    A["Inicio"] --> B["Leer dataset_5001.csv<br/>10 columnas - 5001 registros"]
+    A["Inicio"] --> B["Leer data/dataset_5001.csv<br/>10 columnas - 5001 registros"]
     B --> C["Reservar vectores de resultados<br/>imc, relacion_sf, ventilacion_ml_min, ventilacion_l_min"]
     C --> D["Crear 4 hilos con threading.Thread"]
     D --> E["inicio = time.perf_counter_ns()"]
@@ -151,7 +151,7 @@ flowchart TB
 
 ---
 
-## 4. Flujo de `mimd.py` (MIMD)
+## 4. Flujo de `src/mimd.py` (MIMD)
 
 Aquí se reparten **los datos y las instrucciones**: el dataset se divide en tres bloques
 de 1667 registros y cada hilo aplica una operación distinta sobre su propio bloque. Cada
@@ -159,7 +159,7 @@ hilo mide su tiempo y se guarda el tiempo de la etapa en la base de datos.
 
 ```mermaid
 flowchart TB
-    A["Inicio"] --> B["Leer dataset_5001.csv<br/>10 columnas - 5001 registros"]
+    A["Inicio"] --> B["Leer data/dataset_5001.csv<br/>10 columnas - 5001 registros"]
     B --> C["tamano_parte = 5001 // 3 = 1667"]
     C --> D["Dividir el dataset en 3 bloques"]
 
@@ -191,21 +191,21 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-    subgraph SISD["Secuencial - main.py"]
+    subgraph SISD["Secuencial - src/simd.py"]
         direction TB
         S1["1 instruccion activa"] --> S2["1 procesador<br/>(1 hilo principal)"]
         S2 --> S3["Dataset completo<br/>5001 registros"]
         S3 --> S4["1 resultado por iteracion"]
     end
 
-    subgraph MISD_A["MISD - misd.py"]
+    subgraph MISD_A["MISD - src/misd.py"]
         direction TB
         M1["4 instrucciones distintas<br/>IMC / S-F / ventilacion / conversion"] --> M2["4 procesadores<br/>(4 hilos)"]
         M2 --> M3["El mismo dataset completo<br/>en los 4 hilos"]
         M3 --> M4["4 resultados en paralelo<br/>sobre los mismos 5001 pacientes"]
     end
 
-    subgraph MIMD_A["MIMD - mimd.py"]
+    subgraph MIMD_A["MIMD - src/mimd.py"]
         direction TB
         D1["3 instrucciones distintas<br/>IMC / S-F / ventilacion"] --> D2["3 procesadores<br/>(3 hilos)"]
         D2 --> D3["1/3 del dataset por hilo<br/>1667 registros cada uno"]
@@ -215,16 +215,16 @@ flowchart LR
     SISD ~~~ MISD_A
     MISD_A ~~~ MIMD_A
 
-    NOTE["Nota: main.py se etiqueta como SIMD en la tabla calculo_simd,<br/>pero su ejecucion real es secuencial (SISD), sin hilos."]
+    NOTE["Nota: src/simd.py se etiqueta como SIMD en la tabla calculo_simd,<br/>pero su ejecucion real es secuencial (SISD), sin hilos."]
 ```
 
 ### Mapa arquitectura → código → tabla
 
 | Arquitectura | Archivo | Hilos | Datos por hilo | Tabla de resultados |
 |---|---|---|---|---|
-| Secuencial (etiquetada SIMD) | `main.py` | 1 | 5001 registros | `calculo_simd` |
-| MISD | `misd.py` | 4 | 5001 registros en cada hilo | `calculo_misd` |
-| MIMD | `mimd.py` | 3 | 1667 registros por hilo | `calculo_mimd_etapas` |
+| Secuencial (etiquetada SIMD) | `src/simd.py` | 1 | 5001 registros | `calculo_simd` |
+| MISD | `src/misd.py` | 4 | 5001 registros en cada hilo | `calculo_misd` |
+| MIMD | `src/mimd.py` | 3 | 1667 registros por hilo | `calculo_mimd_etapas` |
 
 ---
 
@@ -282,8 +282,8 @@ erDiagram
     }
 ```
 
-`datos_fisiologicos` es la tabla padre: la llena `misd.py` y las otras tres tablas apuntan a
-ella con `paciente_id`. Por eso, en una base vacía, `misd.py` debe ejecutarse primero.
+`datos_fisiologicos` es la tabla padre: la llena `src/misd.py` y las otras tres tablas apuntan a
+ella con `paciente_id`. Por eso, en una base vacía, `src/misd.py` debe ejecutarse primero.
 
 ---
 
@@ -293,15 +293,15 @@ ella con `paciente_id`. Por eso, en una base vacía, `misd.py` debe ejecutarse p
 sequenceDiagram
     autonumber
     actor U as Usuario
-    participant CSV as dataset_5001.csv
-    participant MISD as misd.py
-    participant MAIN as main.py
-    participant MIMD as mimd.py
+    participant CSV as data/dataset_5001.csv
+    participant MISD as src/misd.py
+    participant SIMD as src/simd.py
+    participant MIMD as src/mimd.py
     participant DB as MySQL
-    participant DASH as dashboard.py
+    participant DASH as src/dashboard.py
 
-    Note over U,DB: Paso 1 - misd.py debe ejecutarse primero<br/>porque crea datos_fisiologicos (tabla padre de las FK)
-    U->>MISD: python misd.py
+    Note over U,DB: Paso 1 - src/misd.py debe ejecutarse primero<br/>porque crea datos_fisiologicos (tabla padre de las FK)
+    U->>MISD: python src/misd.py
     MISD->>CSV: leer 5001 registros x 10 columnas
     MISD->>MISD: 4 hilos sobre todo el dataset
     MISD->>DB: INSERT datos_fisiologicos (ON DUPLICATE KEY UPDATE)
@@ -309,14 +309,14 @@ sequenceDiagram
     DB-->>U: DATOS GUARDADOS CORRECTAMENTE
 
     Note over U,DB: Paso 2 - linea base secuencial
-    U->>MAIN: python main.py
-    MAIN->>CSV: leer id, peso_kg, estatura_m
-    MAIN->>MAIN: calcular IMC en un solo bucle
-    MAIN->>DB: INSERT calculo_simd (ON DUPLICATE KEY UPDATE)
+    U->>SIMD: python src/simd.py
+    SIMD->>CSV: leer id, peso_kg, estatura_m
+    SIMD->>SIMD: calcular IMC en un solo bucle
+    SIMD->>DB: INSERT calculo_simd (ON DUPLICATE KEY UPDATE)
     DB-->>U: DATOS GUARDADOS CORRECTAMENTE
 
     Note over U,DB: Paso 3 - procesamiento MIMD por etapas
-    U->>MIMD: python mimd.py
+    U->>MIMD: python src/mimd.py
     MIMD->>CSV: leer 5001 registros
     MIMD->>MIMD: partir en 3 bloques y lanzar 3 hilos
     MIMD->>DB: CREATE TABLE IF NOT EXISTS calculo_mimd_etapas
@@ -324,7 +324,7 @@ sequenceDiagram
     DB-->>U: DATOS GUARDADOS CORRECTAMENTE
 
     Note over U,DASH: Paso 4 - visualizacion
-    U->>DASH: streamlit run dashboard.py
+    U->>DASH: streamlit run src/dashboard.py
     DASH->>DB: SELECT datos_fisiologicos + calculo_simd + calculo_misd + calculo_mimd_etapas
     DB-->>DASH: DataFrames (pandas)
     DASH-->>U: 3 pestanas con graficos, filtros y tiempos

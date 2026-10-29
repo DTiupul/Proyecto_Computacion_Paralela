@@ -2,8 +2,8 @@
 -- Esquema de la base de datos del proyecto
 -- Indicadores respiratorios con arquitecturas SIMD / MISD / MIMD
 --
--- Uso:
---   mysql -u root -p -P 3307 < esquema.sql
+-- Uso (desde la raiz del repositorio):
+--   mysql -u root -p -P 3307 < sql/esquema.sql
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS proyecto_paralela
@@ -13,7 +13,7 @@ CREATE DATABASE IF NOT EXISTS proyecto_paralela
 USE proyecto_paralela;
 
 -- ------------------------------------------------------------
--- 1. Datos fisiologicos (los llena misd.py desde dataset_5001.csv)
+-- 1. Datos fisiologicos (los llena src/misd.py desde data/dataset_5001.csv)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS datos_fisiologicos (
     id                         INT(10) UNSIGNED NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS datos_fisiologicos (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
--- 2. Resultados del procesamiento secuencial (main.py)
+-- 2. Resultados del procesamiento secuencial (src/simd.py)
 --    Una fila por paciente: ON DUPLICATE KEY UPDATE sobre paciente_id
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS calculo_simd (
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS calculo_simd (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
--- 3. Resultados del procesamiento MISD multihilo (misd.py)
+-- 3. Resultados del procesamiento MISD multihilo (src/misd.py)
 --    Acumula una fila por ejecucion (sin ON DUPLICATE KEY),
 --    por eso no lleva clave unica sobre paciente_id.
 -- ------------------------------------------------------------
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS calculo_misd (
 ) ENGINE=InnoDB;
 
 -- ------------------------------------------------------------
--- 4. Resultados del procesamiento MIMD por etapas (mimd.py)
+-- 4. Resultados del procesamiento MIMD por etapas (src/mimd.py)
 --    Una fila por paciente y etapa calculada.
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS calculo_mimd_etapas (
