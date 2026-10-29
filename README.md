@@ -21,7 +21,7 @@ El objetivo es comparar tres formas de organizar el mismo trabajo:
 
 | Enfoque | Script | Hilos | Qué reparte |
 |---|---|---|---|
-| Secuencial (base) | `main.py` | 1 | Nada: un solo flujo sobre todo el dataset |
+| Secuencial (base) | `simd.py` | 1 | Nada: un solo flujo sobre todo el dataset |
 | MISD | `misd.py` | 4 | Instrucciones: cada hilo aplica una operación distinta sobre **todo** el dataset |
 | MIMD | `mimd.py` | 3 | Datos e instrucciones: el dataset se parte en 3 y cada hilo hace una operación distinta sobre su tercio |
 
