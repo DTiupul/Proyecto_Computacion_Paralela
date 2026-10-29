@@ -1,0 +1,32 @@
+flowchart TB
+    A["Inicio"] --> B["Leer dataset_5001.csv<br/>10 columnas - 5001 registros"]
+    B --> C["Reservar vectores de resultados<br/>imc, relacion_sf, ventilacion_ml_min, ventilacion_l_min"]
+    C --> D["Crear 4 hilos con threading.Thread"]
+    D --> E["inicio = time.perf_counter_ns()"]
+    E --> S["h1.start() / h2.start() / h3.start() / h4.start()"]
+
+    subgraph DATOS["Mismo flujo de datos para los 4 hilos (el dataset completo)"]
+        direction LR
+        H1["Hilo 1 - calcular_imc()<br/>i = 0 .. 5000<br/>imc = peso / estatura^2"]
+        H2["Hilo 2 - calcular_relacion_sf()<br/>i = 0 .. 5000<br/>relacion_sf = spo2 / fio2"]
+        H3["Hilo 3 - calcular_ventilacion_ml_min()<br/>i = 0 .. 5000<br/>volumen_corriente * frecuencia_respiratoria"]
+        H4["Hilo 4 - convertir_ventilacion_ml_a_l()<br/>i = 0 .. 5000<br/>ventilacion_ml_min / 1000"]
+    end
+
+    S --> H1
+    S --> H2
+    S --> H3
+    S --> H4
+
+    H3 -.->|"H4 depende de este resultado<br/>sin sincronizacion (condicion de carrera)"| H4
+
+    H1 --> J["h1.join() / h2.join() / h3.join() / h4.join()"]
+    H2 --> J
+    H3 --> J
+    H4 --> J
+
+    J --> F["fin = time.perf_counter_ns()<br/>tiempo = (fin - inicio) / 1000 us"]
+    F --> G["Imprimir los 5001 registros"]
+    G --> K["MySQL: INSERT datos_fisiologicos<br/>INSERT calculo_misd"]
+    K --> L["commit() y cierre"]
+    L --> M["Fin"]

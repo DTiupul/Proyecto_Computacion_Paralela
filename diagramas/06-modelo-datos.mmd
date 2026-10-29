@@ -1,0 +1,49 @@
+erDiagram
+    datos_fisiologicos ||--o{ calculo_simd : "1:N paciente_id"
+    datos_fisiologicos ||--o{ calculo_misd : "1:N paciente_id"
+    datos_fisiologicos ||--o{ calculo_mimd_etapas : "1:N paciente_id"
+
+    datos_fisiologicos {
+        int id PK "id del CSV"
+        tinyint genero "1 masculino, 0 femenino"
+        int edad
+        tinyint practica_ejercicio "1 si, 0 no"
+        decimal peso_kg
+        decimal estatura_m
+        decimal spo2_pct
+        decimal fio2
+        int volumen_corriente_ml
+        int frecuencia_respiratoria_rpm
+        timestamp fecha_registro
+    }
+
+    calculo_simd {
+        int id PK
+        int paciente_id FK
+        decimal imc "unico por paciente"
+        double tiempo_microsegundos
+        timestamp fecha_procesamiento
+    }
+
+    calculo_misd {
+        int id PK
+        int paciente_id FK
+        decimal imc
+        decimal relacion_sf
+        int ventilacion_ml_min
+        decimal ventilacion_l_min
+        double tiempo_microsegundos
+        timestamp fecha_procesamiento
+    }
+
+    calculo_mimd_etapas {
+        int id PK
+        int paciente_id FK
+        varchar etapa "IMC / RELACION_SF / VENTILACION"
+        decimal imc
+        decimal relacion_sf
+        int ventilacion_ml_min
+        decimal ventilacion_l_min
+        double tiempo_microsegundos
+        timestamp fecha_procesamiento
+    }

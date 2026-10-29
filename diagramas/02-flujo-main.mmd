@@ -1,0 +1,22 @@
+flowchart TB
+    A["Inicio"] --> B["Abrir dataset_5001.csv<br/>encoding utf-8-sig"]
+    B --> C["Leer solo 3 columnas:<br/>id, peso_kg, estatura_m"]
+    C --> D["Reservar vector imc = [0.0] * 5001"]
+    D --> E["inicio = time.perf_counter_ns()"]
+
+    subgraph CALC["Unico flujo de procesamiento"]
+        direction TB
+        F["for i in range(5001):"]
+        G["imc[i] = round(peso_kg[i] / estatura_m[i]^2, 2)"]
+        F --> G
+        G -->|"siguiente i"| F
+    end
+
+    E --> F
+    F -->|"i = 5000"| H["fin = time.perf_counter_ns()<br/>tiempo = (fin - inicio) / 1000 us"]
+    H --> I["Imprimir los 5001 registros"]
+    I --> J["conectar_mysql()"]
+    J --> K["INSERT INTO calculo_simd<br/>ON DUPLICATE KEY UPDATE"]
+    K --> L["commit()"]
+    L --> M["Cerrar cursor y conexion"]
+    M --> N["Fin"]

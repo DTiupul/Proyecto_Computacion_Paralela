@@ -21,7 +21,7 @@ El objetivo es comparar tres formas de organizar el mismo trabajo:
 
 | Enfoque | Script | Hilos | Qué reparte |
 |---|---|---|---|
-| Secuencial (base) | `simd.py` | 1 | Nada: un solo flujo sobre todo el dataset |
+| Secuencial (base) | `main.py` | 1 | Nada: un solo flujo sobre todo el dataset |
 | MISD | `misd.py` | 4 | Instrucciones: cada hilo aplica una operación distinta sobre **todo** el dataset |
 | MIMD | `mimd.py` | 3 | Datos e instrucciones: el dataset se parte en 3 y cada hilo hace una operación distinta sobre su tercio |
 
@@ -45,8 +45,24 @@ python_paralela/
 ├── dashboard.py           # Dashboard Streamlit (3 pestañas: SIMD / MISD / MIMD)
 ├── dataset_5001.csv       # Dataset de entrada (5001 registros)
 ├── esquema.sql            # Creación de la base de datos y sus tablas
+├── diagramas/             # Diagramas del flujo y de las arquitecturas (Mermaid + PNG)
 └── requirements.txt       # Dependencias con versiones fijadas
 ```
+
+## Diagramas
+
+La carpeta [`diagramas/`](diagramas/) contiene diagramas en **Mermaid** (con su versión en
+PNG dentro de `diagramas/img/`) que explican el programa y las arquitecturas empleadas:
+
+1. **Arquitectura general** — del CSV a MySQL y al dashboard.
+2. **Flujo de `main.py`** — procesamiento secuencial.
+3. **Flujo de `misd.py`** — 4 hilos, 4 instrucciones, el mismo dataset.
+4. **Flujo de `mimd.py`** — dataset partido en 3, una instrucción por bloque.
+5. **Comparación de arquitecturas** — SISD vs MISD vs MIMD lado a lado.
+6. **Modelo de datos** — tablas, columnas y claves foráneas.
+7. **Secuencia de ejecución** — orden de los scripts y del dashboard.
+
+Ver el índice completo en [`diagramas/README.md`](diagramas/README.md).
 
 ## Dataset
 

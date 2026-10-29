@@ -1,0 +1,25 @@
+flowchart TB
+    A["Inicio"] --> B["Leer dataset_5001.csv<br/>10 columnas - 5001 registros"]
+    B --> C["tamano_parte = 5001 // 3 = 1667"]
+    C --> D["Dividir el dataset en 3 bloques"]
+
+    D --> P1["Parte 1<br/>indices 0 .. 1666<br/>1667 registros"]
+    D --> P2["Parte 2<br/>indices 1667 .. 3333<br/>1667 registros"]
+    D --> P3["Parte 3<br/>indices 3334 .. 5000<br/>1667 registros"]
+
+    P1 --> H1["Hilo 1 - calcular_imc(inicio, fin)<br/>imc = peso / estatura^2"]
+    P2 --> H2["Hilo 2 - calcular_relacion_sf(inicio, fin)<br/>relacion_sf = spo2 / fio2"]
+    P3 --> H3["Hilo 3 - calcular_ventilacion(inicio, fin)<br/>ml/min y conversion a L/min"]
+
+    H1 --> T1["tiempos['IMC']"]
+    H2 --> T2["tiempos['RELACION_SF']"]
+    H3 --> T3["tiempos['VENTILACION']"]
+
+    T1 --> J["join() de los 3 hilos<br/>tiempo_total start - join"]
+    T2 --> J
+    T3 --> J
+
+    J --> R["Imprimir 3 registros por parte<br/>+ tiempo de cada instruccion"]
+    R --> DB["MySQL:<br/>CREATE TABLE IF NOT EXISTS calculo_mimd_etapas<br/>INSERT una fila por paciente y etapa"]
+    DB --> F["commit() y cierre"]
+    F --> G["Fin"]

@@ -1,0 +1,41 @@
+flowchart TB
+    subgraph ENTRADA["Entrada"]
+        CSV["dataset_5001.csv<br/>5001 registros x 10 columnas"]
+    end
+
+    subgraph PROC["Procesamiento en Python"]
+        MAIN["main.py<br/>Secuencial - 1 hilo<br/>calcula IMC"]
+        MISD["misd.py<br/>4 hilos - MISD<br/>4 operaciones sobre todo el dataset"]
+        MIMD["mimd.py<br/>3 hilos - MIMD<br/>dataset partido en 3"]
+    end
+
+    subgraph BD["MySQL - base de datos proyecto_paralela"]
+        DF[("datos_fisiologicos<br/>datos crudos del paciente")]
+        CS[("calculo_simd<br/>IMC secuencial")]
+        CM[("calculo_misd<br/>IMC, S/F, ventilacion")]
+        CME[("calculo_mimd_etapas<br/>una fila por paciente y etapa")]
+    end
+
+    subgraph VIS["Visualizacion"]
+        DASH["dashboard.py<br/>Streamlit - puerto 8501"]
+    end
+
+    CSV --> MAIN
+    CSV --> MISD
+    CSV --> MIMD
+
+    MISD -->|"INSERT / UPDATE"| DF
+    MISD -->|"INSERT"| CM
+    MAIN -->|"INSERT / UPDATE"| CS
+    MIMD -->|"INSERT / UPDATE"| CME
+
+    DF -.->|"FK paciente_id"| CS
+    DF -.->|"FK paciente_id"| CM
+    DF -.->|"FK paciente_id"| CME
+
+    DF --> DASH
+    CS --> DASH
+    CM --> DASH
+    CME --> DASH
+
+    DASH --> USR["Usuario<br/>3 pestanas: SIMD / MISD / MIMD"]
