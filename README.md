@@ -30,7 +30,6 @@ python_paralela/
 ├── mimd.py                # Multihilo MIMD por etapas -> calculo_mimd_etapas
 ├── conexion.py            # Función conectar_mysql() con los datos de conexión
 ├── dashboard.py           # Dashboard Streamlit (3 pestañas: SIMD / MISD / MIMD)
-├── dashboard_prueba.py    # Variante experimental del dashboard
 ├── dataset_5001.csv       # Dataset de entrada (5001 registros)
 ├── esquema.sql            # Creación de la base de datos y sus tablas
 └── requirements.txt       # Dependencias con versiones fijadas
@@ -194,12 +193,6 @@ MIMD), filtros por género, práctica de ejercicio y categoría de IMC, gráfico
 y una sección de integridad de la base de datos. Usar el botón
 **Actualizar datos consultados** después de volver a ejecutar los scripts.
 
-Para la variante experimental:
-
-```bash
-streamlit run dashboard_prueba.py
-```
-
 ---
 
 # Cómo funciona cada script
@@ -259,6 +252,15 @@ scripts de procesamiento y por el dashboard.
 - El tiempo impreso por `main.py` corresponde solo al cálculo; la carga del CSV y la
   escritura en MySQL quedan fuera de la medición.
 
-# Autor
+# Participantes
+
+Proyecto desarrollado en conjunto por:
+
+| Participante | Aportes |
+|---|---|
+| **Danny Tiupul** | Creación del proyecto, captura de datos y desarrollo de las arquitecturas **MISD** y **MIMD** |
+| **Melany Iza** | Desarrollo de la arquitectura **SIMD** y desarrollo de la base de datos |
+
+Ambos participantes trabajaron en conjunto en el desarrollo de los dashboards.
 
 Proyecto académico de Computación Paralela — ESPE.
