@@ -68,8 +68,8 @@ git --version
 ## 2. Clonar el repositorio
 
 ```bash
-git clone https://github.com/DTiupul/python_paralela.git
-cd python_paralela
+git clone https://github.com/DTiupul/Proyecto_Computacion_Paralela.git
+cd Proyecto_Computacion_Paralela
 ```
 
 ## 3. Crear y activar un entorno virtual
